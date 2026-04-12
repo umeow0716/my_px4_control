@@ -1,0 +1,7 @@
+launch:
+
+- node:
+    pkg: "my_px4_control"
+    exec: "offboard_control"
+    name: "offboard_control"
+    output: "screen"
