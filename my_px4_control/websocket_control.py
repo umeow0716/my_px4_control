@@ -178,7 +178,7 @@ class WebSocketControl(Node):
             self.arm()
 
         if self.state == VehicleState.TAKEOFF:
-            self.publish_attitude_setpoint(-0.9)
+            self.publish_position_setpoint()
 
         if self.state == VehicleState.TAKEOFF and self.vehicle_local_position.z <= -0.5:
             self.state = VehicleState.HOVER

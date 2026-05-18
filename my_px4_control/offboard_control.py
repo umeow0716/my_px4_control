@@ -150,7 +150,6 @@ class OffboardControl(Node):
     def publish_position_setpoint(self):
         """Publish the trajectory setpoint."""
         self.trajectory_setpoint_msg.timestamp = int(self.get_clock().now().nanoseconds / 1000)
-        self.get_logger().info(repr(self.vx))
         self.trajectory_setpoint_msg.position[0] = np.nan
         self.trajectory_setpoint_msg.position[1] = np.nan
         self.trajectory_setpoint_msg.position[2] = self.takeoff_height
@@ -195,7 +194,8 @@ class OffboardControl(Node):
         
         # self.get_logger().info(repr(self.vehicle_local_position.z))
         if self.state == VehicleState.TAKEOFF:
-            self.publish_attitude_setpoint(-0.9)
+            self.publish_position_setpoint()
+            
         if self.state == VehicleState.TAKEOFF and self.vehicle_local_position.z <= -0.5:
             self.state = VehicleState.HOVER
         
