@@ -69,6 +69,7 @@ class OffboardControl(Node):
         self.vx = 0.0
         self.vy = 0.0
         self.vz = 0.0
+        self.wz = 0.0
         
         self.trajectory_setpoint_msg = TrajectorySetpoint()
         self.trajectory_setpoint_msg.velocity[0] = self.vx
@@ -159,6 +160,8 @@ class OffboardControl(Node):
         self.trajectory_setpoint_msg.velocity[0] = self.vx
         self.trajectory_setpoint_msg.velocity[1] = self.vy
         # self.trajectory_setpoint_msg.velocity[2] = self.vz
+        if self.state == VehicleState.HOVER:
+            self.trajectory_setpoint_msg.yawspeed = self.wz
         self.trajectory_setpoint_publisher.publish(self.trajectory_setpoint_msg)
         # self.get_logger().info(f"Publishing position setpoints")
     
