@@ -14,9 +14,10 @@ class CommandPublisher(Node):
             'a': 'left',
             'd': 'right',
             'space': 'stop',
+            'l': 'land',
             'q': 'quit'
         }
-        self.get_logger().info("指揮官節點已啟動。輸入 w, a, s, d, space 或 q 控制。")
+        self.get_logger().info("指揮官節點已啟動。輸入 w, a, s, d, l, space 或 q 控制。")
 
     def send_command(self, cmd_text):
         msg = String()
@@ -43,6 +44,8 @@ def main(args=None):
                 node.send_command('right')
             elif user_input == ' ' or user_input == 'space':
                 node.send_command('stop')
+            elif user_input == 'l':
+                node.send_command('land')
             elif user_input == 'q':
                 print("正在退出...")
                 break

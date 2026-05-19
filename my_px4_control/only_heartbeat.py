@@ -58,24 +58,23 @@ class OffboardControl(Node):
         self.my_px4_control_command_subscriber = self.create_subscription(
             String, '/my_px4_control/vehicle_cmd', self.my_px4_control_command_callback, 10)
         
-        self.state = VehicleState.TAKEOFF
+        self.state = VehicleState.HOVER
 
         # Initialize variables
         self.offboard_setpoint_counter = 0
         self.vehicle_local_position = VehicleLocalPosition()
         self.vehicle_status = VehicleStatus()
-        self.takeoff_height = -1.5
+        self.takeoff_height = -3.0
         
         self.vx = 0.0
         self.vy = 0.0
         self.vz = 0.0
         
         self.trajectory_setpoint_msg = TrajectorySetpoint()
+        self.trajectory_setpoint_msg.yaw = 1.57079
         self.trajectory_setpoint_msg.velocity[0] = self.vx
         self.trajectory_setpoint_msg.velocity[1] = self.vy
         self.trajectory_setpoint_msg.velocity[2] = self.vz
-        self.trajectory_setpoint_msg.position[0] = 0.0
-        self.trajectory_setpoint_msg.position[1] = 0.0
         self.trajectory_setpoint_msg.position[2] = self.takeoff_height
 
         # Create a timer to publish control commands
@@ -110,8 +109,6 @@ class OffboardControl(Node):
         elif cmd == 'stop':
             self.vx =  0.0
             self.vy =  0.0
-        elif cmd == 'land':
-            self.state = VehicleState.LANDING
         else:
             return
         self.get_logger().info(f"Received Vehicle Command `{cmd}`")
@@ -143,7 +140,7 @@ class OffboardControl(Node):
         """Publish the offboard control mode."""
         msg = OffboardControlMode()
         msg.position = True
-        msg.velocity = True
+        msg.velocity = False
         msg.acceleration = False
         msg.attitude = False
         msg.body_rate = False
@@ -153,12 +150,13 @@ class OffboardControl(Node):
     def publish_position_setpoint(self):
         """Publish the trajectory setpoint."""
         self.trajectory_setpoint_msg.timestamp = int(self.get_clock().now().nanoseconds / 1000)
-        self.trajectory_setpoint_msg.position[0] = 0.0
-        self.trajectory_setpoint_msg.position[1] = 0.0
+        self.get_logger().info(repr(self.vx))
+        self.trajectory_setpoint_msg.position[0] = np.nan
+        self.trajectory_setpoint_msg.position[1] = np.nan
         self.trajectory_setpoint_msg.position[2] = self.takeoff_height
         self.trajectory_setpoint_msg.velocity[0] = self.vx
         self.trajectory_setpoint_msg.velocity[1] = self.vy
-        # self.trajectory_setpoint_msg.velocity[2] = self.vz
+        self.trajectory_setpoint_msg.velocity[2] = self.vz
         self.trajectory_setpoint_publisher.publish(self.trajectory_setpoint_msg)
         # self.get_logger().info(f"Publishing position setpoints")
     
@@ -190,26 +188,6 @@ class OffboardControl(Node):
     def timer_callback(self) -> None:
         """Callback function for the timer."""
         self.publish_offboard_control_heartbeat_signal()
-        
-        if self.offboard_setpoint_counter == 10:
-            self.engage_offboard_mode()
-            self.arm()
-        
-        self.get_logger().info(repr(self.vehicle_local_position.x))
-        if self.state == VehicleState.TAKEOFF:
-            self.publish_position_setpoint()
-        if self.state == VehicleState.TAKEOFF and self.vehicle_local_position.z <= -0.5:
-            self.state = VehicleState.HOVER
-        
-        if self.state == VehicleState.HOVER:
-            self.publish_position_setpoint()
-        
-        if self.state == VehicleState.LANDING:
-            self.land()
-
-        if self.offboard_setpoint_counter < 11:
-            self.offboard_setpoint_counter += 1
-
 
 def main(args=None) -> None:
     print('Starting offboard control node...')

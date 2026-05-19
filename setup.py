@@ -29,6 +29,8 @@ setup(
         'console_scripts': [
             'offboard_control = my_px4_control.offboard_control:main',
             'command_publisher = my_px4_control.command_publisher:main',
+            'only_heartbeat = my_px4_control.only_heartbeat:main',
+            'position_record = my_px4_control.position_record:main',
             'websocket_publisher = my_px4_control.websocket_publisher:main',
             'websocket_control = my_px4_control.websocket_control:main',
         ],
