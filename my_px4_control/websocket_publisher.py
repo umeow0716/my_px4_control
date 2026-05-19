@@ -11,7 +11,7 @@ from rclpy.node import Node
 from std_msgs.msg import String
 
 try:
-    import websockets
+    from websockets.asyncio.client import connect
 except ImportError as exc:
     raise RuntimeError(
         "Missing Python package: websockets. Install it with `pip install websockets` "
@@ -23,17 +23,11 @@ class WebSocketPublisher(Node):
     def __init__(self):
         super().__init__('websocket_publisher')
 
-        self.declare_parameter('websocket_url', 'ws://127.0.0.1:8890')
-        self.declare_parameter('reconnect_delay_sec', 1.0)
-        self.declare_parameter('publish_topic', '/my_px4_control/websocket_cmd')
-        self.declare_parameter('heartbeat_timeout_sec', 0.5)
-        self.declare_parameter('watchdog_period_sec', 0.05)
-
-        self.websocket_url = str(self.get_parameter('websocket_url').value)
-        self.reconnect_delay_sec = float(self.get_parameter('reconnect_delay_sec').value)
-        self.publish_topic = str(self.get_parameter('publish_topic').value)
-        self.heartbeat_timeout_sec = float(self.get_parameter('heartbeat_timeout_sec').value)
-        self.watchdog_period_sec = float(self.get_parameter('watchdog_period_sec').value)
+        self.websocket_url = 'ws://127.0.0.1:8890'
+        self.reconnect_delay_sec = 1.0
+        self.publish_topic = '/my_px4_control/websocket_cmd'
+        self.heartbeat_timeout_sec = 0.5
+        self.watchdog_period_sec = 0.05
 
         self.publisher_ = self.create_publisher(String, self.publish_topic, 10)
         self.stop_event = threading.Event()
@@ -64,7 +58,7 @@ class WebSocketPublisher(Node):
             try:
                 self.get_logger().info(f'Connecting to {self.websocket_url}')
 
-                async with websockets.connect(self.websocket_url) as websocket:
+                async with connect(self.websocket_url) as websocket:
                     self.get_logger().info('WebSocket connected')
                     self.mark_heartbeat_received()
 
