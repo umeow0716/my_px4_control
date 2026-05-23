@@ -64,7 +64,7 @@ class OffboardControl(Node):
         self.offboard_setpoint_counter = 0
         self.vehicle_local_position = VehicleLocalPosition()
         self.vehicle_status = VehicleStatus()
-        self.takeoff_height = -1.5
+        self.takeoff_height = -2.2
         
         self.vx = 0.0
         self.vy = 0.0
@@ -159,7 +159,7 @@ class OffboardControl(Node):
         self.trajectory_setpoint_msg.position[2] = self.takeoff_height
         self.trajectory_setpoint_msg.velocity[0] = self.vx
         self.trajectory_setpoint_msg.velocity[1] = self.vy
-        # self.trajectory_setpoint_msg.velocity[2] = self.vz
+        self.trajectory_setpoint_msg.velocity[2] = self.vz
         if self.state == VehicleState.HOVER:
             self.trajectory_setpoint_msg.yawspeed = self.wz
         self.trajectory_setpoint_publisher.publish(self.trajectory_setpoint_msg)
@@ -198,7 +198,6 @@ class OffboardControl(Node):
             self.engage_offboard_mode()
             self.arm()
         
-        self.get_logger().info(repr(self.vehicle_local_position.x))
         if self.state == VehicleState.TAKEOFF:
             self.publish_position_setpoint()
         if self.state == VehicleState.TAKEOFF and self.vehicle_local_position.z <= -0.5:
