@@ -82,10 +82,10 @@ class WebSocketControl(Node):
 
         self.timer = self.create_timer(0.1, self.timer_callback)
 
-    def vehicle_local_position_callback(self, vehicle_local_position):
+    def vehicle_local_position_callback(self, vehicle_local_position: VehicleLocalPosition):
         self.vehicle_local_position = vehicle_local_position
 
-    def vehicle_status_callback(self, vehicle_status):
+    def vehicle_status_callback(self, vehicle_status: VehicleStatus):
         self.vehicle_status = vehicle_status
 
     def websocket_cmd_callback(self, msg: String):
@@ -134,17 +134,33 @@ class WebSocketControl(Node):
 
         if now_sec - self.last_websocket_cmd_time_sec > self.websocket_cmd_timeout_sec:
             self.vx = 0.0
+            self.vy = 0.0
             self.wz = 0.0
+
+        theta = float(self.vehicle_local_position.heading)
+
+        if math.isnan(theta):
+            vx_ned = 0.0
+            vy_ned = 0.0
+        else:
+            vx_body = self.vx   # 你定義的：往機體前方為正
+            vy_body = self.vy   # 你定義的：往機體右方為正，目前可以保持 0
+
+            vx_ned = vx_body * math.cos(theta) - vy_body * math.sin(theta)
+            vy_ned = vx_body * math.sin(theta) + vy_body * math.cos(theta)
 
         self.trajectory_setpoint_msg.timestamp = int(self.get_clock().now().nanoseconds / 1000)
         self.trajectory_setpoint_msg.position[0] = np.nan
         self.trajectory_setpoint_msg.position[1] = np.nan
         self.trajectory_setpoint_msg.position[2] = self.takeoff_height
-        self.trajectory_setpoint_msg.velocity[0] = self.vx
-        self.trajectory_setpoint_msg.velocity[1] = self.vy
+
+        self.trajectory_setpoint_msg.velocity[0] = vx_ned
+        self.trajectory_setpoint_msg.velocity[1] = vy_ned
         self.trajectory_setpoint_msg.velocity[2] = self.vz
+
         self.trajectory_setpoint_msg.yaw = math.nan
         self.trajectory_setpoint_msg.yawspeed = self.wz
+
         self.trajectory_setpoint_publisher.publish(self.trajectory_setpoint_msg)
 
     def publish_attitude_setpoint(self, z: float):
